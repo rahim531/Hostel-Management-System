@@ -1421,60 +1421,95 @@ void viewAttendance()
 void checkIn(Student s)
 {
     int hour;
+    int minute;
+
+    printf("\n========== CHECK IN ==========\n");
 
     printf("Enter Current Hour (24 Format): ");
-    scanf("%d",&hour);
+    scanf("%d", &hour);
 
-    FILE *fp=fopen("attendance.txt","a");
+    printf("Enter Current Minute : ");
+    scanf("%d", &minute);
 
-    fprintf(fp,"%d %s CHECK-IN %d:00\n",
+    if(hour < 0 || hour > 23 || minute < 0 || minute > 59)
+    {
+        printf("\nInvalid Time!\n");
+        return;
+    }
+
+    FILE *fp = fopen("attendance.txt", "a");
+
+    if(fp == NULL)
+    {
+        printf("\nError opening attendance file!\n");
+        return;
+    }
+
+    fprintf(fp,
+            "%d %s CHECK-IN %02d:%02d\n",
             s.id,
             s.name,
-            hour);
+            hour,
+            minute);
 
     fclose(fp);
 
-    if(strcmp(s.gender,"Male")==0 && hour>22)
+    int late = 0;
+
+    /* Male last entry time = 10:00 PM */
+   if(strcmp(s.gender,"Male") == 0 ||
+   strcmp(s.gender,"male") == 0)
+{
+    if(hour > 22 || (hour == 22 && minute > 0))
     {
-        FILE *cp=fopen("Late_Entry.txt","a");
+        late = 1;
+    }
+}
+
+    /* Female last entry time = 7:00 PM */
+   else if(strcmp(s.gender,"Female") == 0 ||
+        strcmp(s.gender,"female") == 0)
+{
+    if(hour > 19 || (hour == 19 && minute > 0))
+    {
+        late = 1;
+    }
+}
+    if(late == 1)
+    {
+        FILE *cp = fopen("Late_Entry.txt", "a");
+
+        if(cp == NULL)
+        {
+            printf("\nError opening Late_Entry.txt!\n");
+            return;
+        }
 
         fprintf(cp,
                 "Student ID : %d\n"
                 "Student : %s\n"
+                "Gender : %s\n"
                 "Parent Email : %s\n"
-                "Late Entry : %d:00\n\n",
+                "Late Entry : %02d:%02d\n"
+                "Status : Late Entry Complaint\n"
+                "----------------------------------------\n",
                 s.id,
                 s.name,
+                s.gender,
                 s.parentEmail,
-                hour);
+                hour,
+                minute);
 
         fclose(cp);
 
-        printf("\nLate Entry! Complaint Sent.\n");
+        printf("\n*** LATE ENTRY DETECTED! ***\n");
+        printf("Late Entry Complaint Sent Successfully.\n");
+        printf("Parent Email : %s\n", s.parentEmail);
     }
-
-    else if(strcmp(s.gender,"Female")==0 && hour>19)
-    {
-        FILE *cp=fopen("Late_Entry.txt","a");
-
-        fprintf(cp,
-                "Student ID : %d\n"
-                "Student : %s\n"
-                "Parent Email : %s\n"
-                "Late Entry : %d:00\n\n",
-                s.id,
-                s.name,
-                s.parentEmail,
-                hour);
-
-        fclose(cp);
-
-        printf("\nLate Entry! Complaint Sent.\n");
-    }
-
     else
     {
         printf("\nCheck In Successful.\n");
+        printf("Entry Time : %02d:%02d\n", hour, minute);
     }
 }
 void checkOut(Student s)
